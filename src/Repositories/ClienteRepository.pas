@@ -8,7 +8,7 @@ uses
 type
   TClienteRepository = class(TInterfacedObject, IClientInterface)
   public
-    function BuscarPorCodigo(const Codigo: Integer): TCliente;
+    function BuscarPorCodigo(Codigo: Integer): TCliente;
     function Listar: TObjectList<TCliente>;
     function Adicionar(const Cliente: TCliente): Boolean;
     function Atualizar(const Cliente: TCliente): Boolean;
@@ -28,7 +28,8 @@ uses Connection,
      FireDAC.Phys.SQLiteDef,
      FireDAC.Stan.Def,
      FireDAC.Stan.Async,
-     FireDAC.DApt;
+     FireDAC.DApt,
+     Functions;
 
 function TClienteRepository.Listar: TObjectList<TCliente>;
 var
@@ -96,9 +97,27 @@ begin
 
 end;
 
-function TClienteRepository.BuscarPorCodigo(const Codigo: Integer): TCliente;
+function TClienteRepository.BuscarPorCodigo(Codigo: Integer): TCliente;
+var
+  Query: TFDQuery;
+  Cliente : TCliente;
 begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := GetConnection;
+    Query.SQL.Text := 'SELECT * FROM clientes where codigo = :codigo';
+    Query.ParamByName('codigo').AsInteger := Codigo;
+    Query.Open;
 
+    Cliente := TCliente.Create;
+    if not Query.IsEmpty then
+    begin
+      MapQueryToModel(Query, Cliente);
+    end;
+    Result := Cliente;
+  finally
+    Query.Free;
+  end;
 end;
 
 function TClienteRepository.Excluir(const Codigo: Integer): Boolean;

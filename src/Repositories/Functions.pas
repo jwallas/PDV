@@ -72,7 +72,7 @@ begin
         if Assigned(Field) then
         begin
           case Field.DataType of
-            ftInteger, ftSmallint, ftWord:
+            ftAutoInc,ftInteger, ftSmallint, ftWord:
               Prop.SetValue(AModel, Field.AsInteger);
             ftFloat, ftBCD, ftFMTBcd:
               Prop.SetValue(AModel, Field.AsFloat);

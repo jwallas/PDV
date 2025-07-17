@@ -152,7 +152,7 @@
         <DCCReference Include="src\ViewsModels\PedidoViewModel.pas"/>
         <DCCReference Include="src\ViewsModels\PedidoItemViewModel.pas"/>
         <DCCReference Include="src\Views\FrmCadastrarProduto.pas">
-            <Form>Form1</Form>
+            <Form>FormCadastrarProduto</Form>
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="src\Controllers\ProdutoControllerUnit.pas"/>

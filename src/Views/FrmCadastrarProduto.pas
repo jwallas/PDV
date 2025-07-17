@@ -7,14 +7,14 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Buttons;
 
 type
-  TForm1 = class(TForm)
+  TFormCadastrarProduto = class(TForm)
     lblNome: TLabel;
     edtDescricao: TEdit;
     lblCPF: TLabel;
-    BitBtnOK: TBitBtn;
+    BitBtnGravar: TBitBtn;
     BitBtnCancelar: TBitBtn;
     edtPreco: TEdit;
-    procedure BitBtnOKClick(Sender: TObject);
+    procedure BitBtnGravarClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -22,7 +22,7 @@ type
   end;
 
 var
-  Form1: TForm1;
+  FormCadastrarProduto: TFormCadastrarProduto;
 
 implementation
 
@@ -30,7 +30,7 @@ uses ProdutoControllerUnit, ProdutoViewModel;
 
 {$R *.dfm}
 
-procedure TForm1.BitBtnOKClick(Sender: TObject);
+procedure TFormCadastrarProduto.BitBtnGravarClick(Sender: TObject);
 var
   produto : TProdutoViewModel;
   produtoController: TProdutoController;

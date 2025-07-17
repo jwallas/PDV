@@ -1,7 +1,7 @@
-object Form1: TForm1
+object FormCadastrarProduto: TFormCadastrarProduto
   Left = 0
   Top = 0
-  Caption = 'Form1'
+  Caption = 'Cadastrar Produto'
   ClientHeight = 127
   ClientWidth = 389
   Color = clBtnFace
@@ -33,16 +33,16 @@ object Form1: TForm1
     CharCase = ecUpperCase
     TabOrder = 0
   end
-  object BitBtnOK: TBitBtn
+  object BitBtnGravar: TBitBtn
     Left = 222
     Top = 90
     Width = 75
     Height = 25
-    Caption = 'OK'
+    Caption = '&Gravar'
     Default = True
     NumGlyphs = 2
-    TabOrder = 1
-    OnClick = BitBtnOKClick
+    TabOrder = 2
+    OnClick = BitBtnGravarClick
   end
   object BitBtnCancelar: TBitBtn
     Left = 309
@@ -50,15 +50,15 @@ object Form1: TForm1
     Width = 75
     Height = 25
     Cancel = True
-    Caption = 'Cancelar'
+    Caption = '&Sair'
     NumGlyphs = 2
-    TabOrder = 2
+    TabOrder = 3
   end
   object edtPreco: TEdit
     Left = 120
     Top = 52
     Width = 121
     Height = 23
-    TabOrder = 3
+    TabOrder = 1
   end
 end

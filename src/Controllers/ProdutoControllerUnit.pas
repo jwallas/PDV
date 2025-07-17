@@ -11,17 +11,38 @@ uses
 type
   TProdutoController = class
   public
+    function BuscarProduto(Codigo: Integer): TProdutoViewModel;
     function SalvarProduto(const ProdutoViewModel: TProdutoViewModel): boolean;
   end;
+
 implementation
+
+var
+  Repositorio: IProdutoInterface;
+
+function TProdutoController.BuscarProduto(Codigo: Integer): TProdutoViewModel;
+var
+  viewModel : TProdutoViewModel;
+  model: TProduto;
+begin
+
+   Repositorio := TRepositoryFactory.Produto;
+   model := Repositorio.BuscarPorCodigo(Codigo);
+
+   viewModel := TProdutoViewModel.Create;
+   viewModel.Codigo := Codigo;
+   viewModel.Descricao := model.Descricao;
+   viewModel.PrecoVenda := model.PrecoVenda;
+
+   result := viewModel;
+
+end;
 
 function TProdutoController.SalvarProduto(const ProdutoViewModel: TProdutoViewModel): Boolean;
 var
-  Repositorio: IProdutoInterface;
   model: TProduto;
-
 begin
-// Converte a ViewModel para Model
+
   model := TProduto.Create;
   try
     model.Descricao := ProdutoViewModel.Descricao;

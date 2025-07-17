@@ -24,7 +24,7 @@ uses
   ProdutoViewModel in 'src\ViewsModels\ProdutoViewModel.pas',
   PedidoViewModel in 'src\ViewsModels\PedidoViewModel.pas',
   PedidoItemViewModel in 'src\ViewsModels\PedidoItemViewModel.pas',
-  FrmCadastrarProduto in 'src\Views\FrmCadastrarProduto.pas' {Form1},
+  FrmCadastrarProduto in 'src\Views\FrmCadastrarProduto.pas' {FormCadastrarProduto},
   ProdutoControllerUnit in 'src\Controllers\ProdutoControllerUnit.pas';
 
 {$R *.res}
@@ -34,6 +34,6 @@ begin
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TFormPDV, FormPDV);
   Application.CreateForm(TFormCadastrarCliente, FormCadastrarCliente);
-  Application.CreateForm(TForm1, Form1);
+  Application.CreateForm(TFormCadastrarProduto, FormCadastrarProduto);
   Application.Run;
 end.

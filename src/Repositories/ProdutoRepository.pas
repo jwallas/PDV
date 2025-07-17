@@ -28,7 +28,8 @@ uses Connection,
      FireDAC.Phys.SQLiteDef,
      FireDAC.Stan.Def,
      FireDAC.Stan.Async,
-     FireDAC.DApt;
+     FireDAC.DApt,
+     Functions;
 
 function TProdutoRepository.Listar: TObjectList<TProduto>;
 var
@@ -96,7 +97,27 @@ begin
 end;
 
 function TProdutoRepository.BuscarPorCodigo(const Codigo: Integer): TProduto;
+var
+  Query: TFDQuery;
+  Produto : TProduto;
 begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := GetConnection;
+    Query.SQL.Text := 'SELECT * FROM produtos where codigo = :codigo';
+    Query.ParamByName('codigo').AsInteger := Codigo;
+    Query.Open;
+
+    Produto := TProduto.Create;
+    if not Query.IsEmpty then
+    begin
+      MapQueryToModel(Query, Produto);
+    end;
+    Result := Produto;
+  finally
+    Query.Free;
+  end;
+
 
 end;
 
