@@ -10,6 +10,61 @@ Este sistema básico simula um **PDV (Ponto de Venda)**, permitindo:
 
 ---
 
+## 📦 Arquitetura Modular do Projeto
+
+O código está estruturado em camadas bem definidas, localizadas dentro da pasta `/src`:
+
+/src
+├── Controllers
+├── Interfaces
+├── Models
+├── Queries
+├── Repositories
+├── Views
+└── ViewsModels
+
+yaml
+Copiar
+Editar
+
+### 📂 Explicação das Pastas
+
+- **Controllers/**  
+  Controla o fluxo do sistema, intermediando Views, Models e Repositories.
+
+- **Interfaces/**  
+  Define abstrações que reduzem o acoplamento e facilitam a manutenção.
+
+- **Models/**  
+  Representa entidades do negócio: Cliente, Produto, Pedido, ItemPedido.
+
+- **Queries/**  
+  Consultas específicas do sistema, usadas para relatórios e carregamentos parciais.
+
+- **Repositories/**  
+  Responsáveis pela camada de acesso a dados com **SQLite**, incluindo:
+  - Criação automática do banco e tabelas no primeiro uso.
+  - Operações CRUD encapsuladas.
+  - Independência da UI para persistência.
+
+- **Views/**  
+  Telas (VCL Forms) responsáveis pela interação com o usuário.
+
+- **ViewsModels/**  
+  Camada opcional para organização de dados da interface no padrão MVVM.
+
+---
+
+## ✅ Benefícios do Modelo
+
+- Aplicação de princípios **SOLID**.
+- Separação entre **lógica de negócios** e **persistência**.
+- Banco de dados **SQLite** leve e local, sem dependência de servidores externos.
+- Reaproveitamento futuro do código com diferentes tecnologias (ex.: FireDAC, REST).
+- Facilitada a manutenção, testes e expansão do sistema.
+
+---
+
 ## 📋 Tecnologias Utilizadas
 
 - Delphi 
@@ -57,10 +112,10 @@ Não é necessária configuração de banco de dados externo, pois o sistema ir�
 
 ## ⚙️ Observações Técnicas
 
-- A persistência dos dados e consultas estão sendo feitas no banco SQLITE.
-- Foi utilizado um modelo de MVC para acesso a dados.
+- O banco de dados (`pdv.db`) é criado automaticamente.
+- As tabelas são geradas caso não existam.
+- CRUD operando via **FireDAC**.
 - Validações básicas implementadas nos eventos `OnExit` dos campos.
-- O subtotal é recalculado automaticamente após alterações no `ClientDataSetItens`.
 
 ---
 
