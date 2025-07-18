@@ -77,6 +77,7 @@ type
     procedure setCodigoCliente(const Value: Integer);
     procedure TratarEnterPadrao(Sender: TObject; var Key: Char);
     procedure AplicarEnterParaTodosOsEdits(Form: TForm);
+    procedure ResetarGrid;
 
     property CodigoCliente: Integer read getCodigoCliente write setCodigoCliente;
     property SubTotal: Double read getSubTotal write setSubTotal;
@@ -105,7 +106,6 @@ var
 
 
 {$R *.dfm}
-
 
 procedure TFormPDV.BitBtnCancelarPedidoClick(Sender: TObject);
 begin
@@ -251,7 +251,7 @@ begin
         ClientDataSetItens.Next;
       end
     finally
-      ClientDataSetItens.DisableControls;
+      ClientDataSetItens.EnableControls;
     end;
 
 
@@ -259,6 +259,8 @@ begin
     begin
       ShowMessage('Pedido gravado com sucesso.');
       LimparControles();
+      ResetarGrid;
+      editCodigoCliente.SetFocus;
     end;
 
   end;
@@ -270,6 +272,7 @@ procedure TFormPDV.CalcularSubTotal;
 var
   TotalGeral: Double;
 begin
+
   TotalGeral := 0;
   ClientDataSetItens.DisableControls;
   try
@@ -283,6 +286,7 @@ begin
     SubTotal := TotalGeral;
     ClientDataSetItens.EnableControls;
   end;
+
 end;
 
 procedure TFormPDV.ClientDataSetItensAfterDelete(DataSet: TDataSet);
@@ -370,6 +374,12 @@ begin
       ClientDataSetItens.FieldByName('Total').AsFloat      := totalDoItem;
       ClientDataSetItens.Post;
 
+      dbGridProdutos.Refresh;
+
+      ClientDataSetItens.First;
+      dbGridProdutos.Repaint;
+      dbGridProdutos.Refresh;
+
       LimparControlesProduto;
 
       editCodigoProduto.SetFocus();
@@ -437,42 +447,7 @@ begin
   editNomeDoCliente.Clear;
 
   SubTotal := 0;
-
-  if ClientDataSetItens.Active then
-  begin
-
-    DataSourceItens.DataSet := nil;
-
-    ClientDataSetItens.Close;
-    ClientDataSetItens.Open;
-
-
-    DataSourceItens.DataSet := ClientDataSetItens;
-
-
-    for I := 1 to 2 do
-    begin
-      ClientDataSetItens.Append;
-
-
-      if ClientDataSetItens.FindField('Descricao') <> nil then
-        ClientDataSetItens.FieldByName('Descricao').AsString := '';
-
-      ClientDataSetItens.Post;
-    end;
-
-
-    dbGridProdutos.DataSource := nil;
-    dbGridProdutos.DataSource := DataSourceItens;
-
-    dbGridProdutos.Repaint;
-    dbGridProdutos.Refresh;
-    Application.ProcessMessages;
-  end;
-
-
   ultimoProdutoPesquisado.Free;
-
 end;
 
 procedure TFormPDV.LimparControlesProduto;
@@ -560,6 +535,27 @@ begin
     if Form.Components[i] is TEdit then
       TEdit(Form.Components[i]).OnKeyPress := TratarEnterPadrao;
   end;
+end;
+
+procedure TFormPDV.ResetarGrid;
+begin
+  DataSourceItens.DataSet := nil;
+  ClientDataSetItens.Close;
+  ClientDataSetItens.FieldDefs.Clear;
+  ClientDataSetItens.FieldDefs.Add('Codigo', ftString, 20);
+  ClientDataSetItens.FieldDefs.Add('Descricao', ftString, 100);
+  ClientDataSetItens.FieldDefs.Add('Qtd', ftFloat, 0);
+  ClientDataSetItens.FieldDefs.Add('Unitario', ftFloat, 0);
+  ClientDataSetItens.FieldDefs.Add('Total', ftFloat, 0);
+
+  ClientDataSetItens.CreateDataSet;
+  DataSourceItens.DataSet := ClientDataSetItens;
+  dbGridProdutos.DataSource := DataSourceItens;
+  ClientDataSetItens.Open;
+
+  dbGridProdutos.Refresh;
+  dbGridProdutos.Invalidate;
+  Application.ProcessMessages;
 end;
 
 
