@@ -51,7 +51,7 @@ Não é necessária configuração de banco de dados externo, pois o sistema ir�
 - Inclusão automática no grid e atualização do subtotal.
 - Permite cancelamento do pedido.
 - Exclusão de itens.
-- Gravação do pedido (simulada).
+- Gravação do pedido.
 
 ---
 
