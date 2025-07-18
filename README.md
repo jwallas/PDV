@@ -14,9 +14,9 @@ Este sistema básico simula um **PDV (Ponto de Venda)**, permitindo:
 
 - Delphi 
 - VCL
-- ClientDataSet (armazenamento temporário)
+- ClientDataSet 
 - TDBGrid para exibição dos itens do pedido
-
+- SQLITE
 ---
 
 ## 🚀 Como Executar
@@ -25,7 +25,7 @@ Este sistema básico simula um **PDV (Ponto de Venda)**, permitindo:
 2. Abra o arquivo do projeto (`PDV.dproj`) no Delphi.
 3. Compile e execute o projeto.
 
-Não é necessária configuração de banco de dados externo, pois o sistema utiliza `ClientDataSet` em memória.
+Não é necessária configuração de banco de dados externo, pois o sistema irá criar o banco e as tabelas.
 
 ---
 
