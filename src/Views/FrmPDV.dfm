@@ -177,6 +177,7 @@ object FormPDV: TFormPDV
       Height = 25
       Caption = '&Sair'
       TabOrder = 2
+      OnClick = ButtonSairClick
     end
   end
   object dbGridProdutos: TDBGrid

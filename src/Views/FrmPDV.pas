@@ -60,6 +60,7 @@ type
       Shift: TShiftState);
     procedure mniPedidosRealizadosClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure ButtonSairClick(Sender: TObject);
   private
     { Private declarations }
 
@@ -107,15 +108,215 @@ var
 
 {$R *.dfm}
 
+{$Region 'Eventos'}
+
+procedure TFormPDV.FormCreate(Sender: TObject);
+begin
+  AplicarEnterParaTodosOsEdits(Self);
+end;
+
+procedure TFormPDV.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if key = VK_ESCAPE then
+  begin
+     if MessageDlg('Deseja realmente sair da aplicação?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+     begin
+       close;
+     end;
+  end;
+end;
+
+procedure TFormPDV.editCodigoClienteExit(Sender: TObject);
+begin
+  BitBtnCancelarPedido.Visible := Trim(editCodigoCliente.Text) = '';
+  BuscarCliente();
+end;
+
+
+procedure TFormPDV.editCodigoProdutoExit(Sender: TObject);
+begin
+   BuscarProduto;
+end;
+
+procedure TFormPDV.editValorExit(Sender: TObject);
+var
+  totalDoItem: Double;
+begin
+
+  if (editDescricaoDoProduto.Text <> EmptyStr) then
+  begin
+
+    try
+
+      ClientDataSetItens.Append;
+      ClientDataSetItens.FieldByName('Codigo').AsString    := editCodigoProduto.Text;
+      ClientDataSetItens.FieldByName('Descricao').AsString := editDescricaoDoProduto.Text;
+      ClientDataSetItens.FieldByName('Qtd').AsFloat        := StrToFloatDef(editQuantidade.Text,0);
+      ClientDataSetItens.FieldByName('Unitario').AsFloat   := StrToFloatDef(editValor.Text,0);
+
+      totalDoItem := ClientDataSetItens.FieldByName('Qtd').AsFloat * ClientDataSetItens.FieldByName('Unitario').AsFloat;
+
+      ClientDataSetItens.FieldByName('Total').AsFloat      := totalDoItem;
+      ClientDataSetItens.Post;
+
+      dbGridProdutos.Refresh;
+
+      ClientDataSetItens.First;
+      dbGridProdutos.Repaint;
+      dbGridProdutos.Refresh;
+
+      LimparControlesProduto;
+
+      editCodigoProduto.SetFocus();
+
+     except on E: Exception do
+
+      ShowMessage('Ocorreu um erro: ' + E.Message);
+
+
+    end;
+
+  end
+  else LimparControlesProduto;
+end;
+
 procedure TFormPDV.BitBtnCancelarPedidoClick(Sender: TObject);
 begin
-  if MessageDlg('Deseja realmente excluir o pedido?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+  if MessageDlg('Deseja realmente cancelar o pedido?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
   begin
     LimparControles;
     LimparControlesProduto;
   end;
 
 end;
+
+
+procedure TFormPDV.dbGridProdutosDrawColumnCell(Sender: TObject;
+  const Rect: TRect; DataCol: Integer; Column: TColumn; State: TGridDrawState);
+begin
+if not (gdSelected in State) then
+  begin
+    if ClientDataSetItens.RecNo mod 2 = 0 then
+      dbGridProdutos.Canvas.Brush.Color := clSilver
+    else
+      dbGridProdutos.Canvas.Brush.Color := clWhite;
+
+    dbGridProdutos.Canvas.FillRect(Rect);
+    dbGridProdutos.DefaultDrawColumnCell(Rect, DataCol, Column, State);
+  end
+  else
+  begin
+    // Deixa a seleção padrão
+    dbGridProdutos.Canvas.Brush.Color := clHighlight;
+    dbGridProdutos.Canvas.Font.Color := clHighlightText;
+    dbGridProdutos.Canvas.FillRect(Rect);
+    dbGridProdutos.DefaultDrawColumnCell(Rect, DataCol, Column, State);
+  end;
+end;
+
+procedure TFormPDV.dbGridProdutosKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+if Key = VK_RETURN then
+  begin
+
+    if ClientDataSetItens.State in [dsEdit, dsInsert] then
+    begin
+      ClientDataSetItens.Post;
+    end;
+
+    Key := 0;
+  end;
+end;
+
+procedure TFormPDV.ClientDataSetItensAfterDelete(DataSet: TDataSet);
+begin
+  CalcularSubTotal;
+end;
+
+procedure TFormPDV.ClientDataSetItensAfterPost(DataSet: TDataSet);
+begin
+  CalcularSubTotal;
+end;
+
+procedure TFormPDV.ClientDataSetItensCalcFields(DataSet: TDataSet);
+begin
+  DataSet.FieldByName('Total').AsFloat := DataSet.FieldByName('Qtd').AsFloat * DataSet.FieldByName('Unitario').AsFloat;
+end;
+
+procedure TFormPDV.ButtonGravarPedidoClick(Sender: TObject);
+var
+  pedidoController: TPedidoController;
+  pedido : TPedidoViewModel;
+  item   : TPedidoItemViewModel;
+  itens  : TObjectList<TPedidoItemViewModel> ;
+  resultado: Boolean;
+begin
+  if Assigned(clienteDefinido) then
+  begin
+
+    pedido := TPedidoViewModel.Create;
+    pedido.DataEmissao := DateToStr(now);
+    pedido.CodCliente  := clientedefinido.Codigo;
+    pedido.ValorTotal  := SubTotal;
+
+    itens := TObjectList<TPedidoItemViewModel>.Create;
+
+    ClientDataSetItens.DisableControls;
+    try
+      ClientDataSetItens.First;
+      while not ClientDataSetItens.Eof do
+      begin
+
+        item := TPedidoItemViewModel.Create;
+        item.CodProduto := ClientDataSetItensCodigo.AsInteger;
+        item.Quant      := ClientDataSetItensQtd.AsFloat;
+        item.ValorUnit  := ClientDataSetItensUnitario.AsFloat;
+        item.ValorTotal := ClientDataSetItensTotal.AsFloat;
+
+        itens.Add(item);
+
+        ClientDataSetItens.Next;
+      end
+    finally
+      ClientDataSetItens.EnableControls;
+    end;
+
+    if (pedidoController.SalvarPedido(pedido,itens)) then
+    begin
+      ShowMessage('Pedido gravado com sucesso.');
+      LimparControles();
+      ResetarGrid;
+      editCodigoCliente.SetFocus;
+    end;
+
+  end;
+
+end;
+
+procedure TFormPDV.ButtonExcluirItemClick(Sender: TObject);
+begin
+
+    if not ClientDataSetItens.IsEmpty then
+    begin
+      if MessageDlg('Deseja excluir a linha selecionada?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+        ClientDataSetItens.Delete;
+    end
+    else
+      ShowMessage('Nenhum registro para excluir.');
+
+end;
+
+procedure TFormPDV.ButtonSairClick(Sender: TObject);
+begin
+  close;
+end;
+
+
+{$ENDREGION}
+
+{$Region 'Métodos'}
 
 procedure TFormPDV.BuscarCliente;
 var
@@ -203,71 +404,6 @@ begin
 
 end;
 
-procedure TFormPDV.ButtonExcluirItemClick(Sender: TObject);
-begin
-
-    if not ClientDataSetItens.IsEmpty then
-    begin
-      if MessageDlg('Deseja excluir a linha selecionada?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-        ClientDataSetItens.Delete;
-    end
-    else
-      ShowMessage('Nenhum registro para excluir.');
-
-end;
-
-procedure TFormPDV.ButtonGravarPedidoClick(Sender: TObject);
-var
-  pedidoController: TPedidoController;
-  pedido : TPedidoViewModel;
-  item   : TPedidoItemViewModel;
-  itens  : TObjectList<TPedidoItemViewModel> ;
-  resultado: Boolean;
-begin
-  if Assigned(clienteDefinido) then
-  begin
-
-    pedido := TPedidoViewModel.Create;
-    pedido.DataEmissao := DateToStr(now);
-    pedido.CodCliente  := clientedefinido.Codigo;
-    pedido.ValorTotal  := SubTotal;
-
-    itens := TObjectList<TPedidoItemViewModel>.Create;
-
-    ClientDataSetItens.DisableControls;
-    try
-      ClientDataSetItens.First;
-      while not ClientDataSetItens.Eof do
-      begin
-
-        item := TPedidoItemViewModel.Create;
-        item.CodProduto := ClientDataSetItensCodigo.AsInteger;
-        item.Quant      := ClientDataSetItensQtd.AsFloat;
-        item.ValorUnit  := ClientDataSetItensUnitario.AsFloat;
-        item.ValorTotal := ClientDataSetItensTotal.AsFloat;
-
-        itens.Add(item);
-
-        ClientDataSetItens.Next;
-      end
-    finally
-      ClientDataSetItens.EnableControls;
-    end;
-
-
-    if (pedidoController.SalvarPedido(pedido,itens)) then
-    begin
-      ShowMessage('Pedido gravado com sucesso.');
-      LimparControles();
-      ResetarGrid;
-      editCodigoCliente.SetFocus;
-    end;
-
-  end;
-
-end;
-
-
 procedure TFormPDV.CalcularSubTotal;
 var
   TotalGeral: Double;
@@ -289,138 +425,6 @@ begin
 
 end;
 
-procedure TFormPDV.ClientDataSetItensAfterDelete(DataSet: TDataSet);
-begin
-  CalcularSubTotal;
-end;
-
-procedure TFormPDV.ClientDataSetItensAfterPost(DataSet: TDataSet);
-begin
-  CalcularSubTotal;
-end;
-
-procedure TFormPDV.ClientDataSetItensCalcFields(DataSet: TDataSet);
-begin
-  DataSet.FieldByName('Total').AsFloat := DataSet.FieldByName('Qtd').AsFloat * DataSet.FieldByName('Unitario').AsFloat;
-end;
-
-procedure TFormPDV.dbGridProdutosDrawColumnCell(Sender: TObject;
-  const Rect: TRect; DataCol: Integer; Column: TColumn; State: TGridDrawState);
-begin
-if not (gdSelected in State) then
-  begin
-    if ClientDataSetItens.RecNo mod 2 = 0 then
-      dbGridProdutos.Canvas.Brush.Color := clSilver
-    else
-      dbGridProdutos.Canvas.Brush.Color := clWhite;
-
-    dbGridProdutos.Canvas.FillRect(Rect);
-    dbGridProdutos.DefaultDrawColumnCell(Rect, DataCol, Column, State);
-  end
-  else
-  begin
-    // Deixa a seleção padrão
-    dbGridProdutos.Canvas.Brush.Color := clHighlight;
-    dbGridProdutos.Canvas.Font.Color := clHighlightText;
-    dbGridProdutos.Canvas.FillRect(Rect);
-    dbGridProdutos.DefaultDrawColumnCell(Rect, DataCol, Column, State);
-  end;
-end;
-
-procedure TFormPDV.dbGridProdutosKeyDown(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
-begin
-if Key = VK_RETURN then
-  begin
-    // Se o DataSet está em modo de edição ou inserção
-    if ClientDataSetItens.State in [dsEdit, dsInsert] then
-    begin
-      ClientDataSetItens.Post;  // Força gravação das alterações da linha atual
-    end;
-
-    Key := 0;  // Cancela beep do Enter
-  end;
-end;
-
-procedure TFormPDV.editCodigoClienteExit(Sender: TObject);
-begin
-  BitBtnCancelarPedido.Visible := Trim(editCodigoCliente.Text) = '';
-  BuscarCliente();
-end;
-
-procedure TFormPDV.editCodigoProdutoExit(Sender: TObject);
-begin
-   BuscarProduto;
-end;
-
-procedure TFormPDV.editValorExit(Sender: TObject);
-var
-  totalDoItem: Double;
-begin
-
-  if (editDescricaoDoProduto.Text <> EmptyStr) then
-  begin
-
-    try
-
-      ClientDataSetItens.Append;
-      ClientDataSetItens.FieldByName('Codigo').AsString    := editCodigoProduto.Text;
-      ClientDataSetItens.FieldByName('Descricao').AsString := editDescricaoDoProduto.Text;
-      ClientDataSetItens.FieldByName('Qtd').AsFloat        := StrToFloatDef(editQuantidade.Text,0);
-      ClientDataSetItens.FieldByName('Unitario').AsFloat   := StrToFloatDef(editValor.Text,0);
-
-      totalDoItem := ClientDataSetItens.FieldByName('Qtd').AsFloat * ClientDataSetItens.FieldByName('Unitario').AsFloat;
-
-      ClientDataSetItens.FieldByName('Total').AsFloat      := totalDoItem;
-      ClientDataSetItens.Post;
-
-      dbGridProdutos.Refresh;
-
-      ClientDataSetItens.First;
-      dbGridProdutos.Repaint;
-      dbGridProdutos.Refresh;
-
-      LimparControlesProduto;
-
-      editCodigoProduto.SetFocus();
-
-     except on E: Exception do
-
-      ShowMessage('Ocorreu um erro: ' + E.Message);
-
-
-    end;
-
-  end
-  else LimparControlesProduto;
-end;
-
-procedure TFormPDV.FormCreate(Sender: TObject);
-begin
-  AplicarEnterParaTodosOsEdits(Self);
-end;
-
-procedure TFormPDV.FormKeyDown(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
-begin
-{
-  if Key = VK_RETURN then
-  begin
-      if not (ActiveControl is TDBGrid) then
-      begin
-        Key := 0;
-        Perform(WM_NEXTDLGCTL, 0, 0);
-      end;
-  end;
-  }
-  if key = VK_ESCAPE then
-  begin
-     if MessageDlg('Deseja realmente sair da aplicação?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-     begin
-       close;
-     end;
-  end;
-end;
 
 function TFormPDV.IsCodigoClienteValido: Boolean;
 var
@@ -470,7 +474,6 @@ begin
     frm.Free;
   end;
 end;
-
 
 procedure TFormPDV.mniPedidosRealizadosClick(Sender: TObject);
 var
@@ -558,6 +561,6 @@ begin
   Application.ProcessMessages;
 end;
 
-
+{$ENDREGION}
 
 end.
