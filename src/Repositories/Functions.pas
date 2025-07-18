@@ -9,6 +9,7 @@ uses
   FireDAC.UI.Intf;
 
 function CreateTable( FConnection: TFDConnection ): boolean;
+function CreateIndex( FConnection: TFDConnection) : Boolean;
 procedure MapQueryToModel(AQuery: TFDQuery; AModel: TObject);
 
 implementation
@@ -41,14 +42,24 @@ uses
      FConnection.ExecSQL(
       'CREATE TABLE IF NOT EXISTS pedidos (' +
       'numpedido INTEGER PRIMARY KEY AUTOINCREMENT, ' +
-      'dataemissao DATE, codcliente INTEGER, valortotal REAL)' );
+      'dataemissao TEXT, codcliente INTEGER, valortotal REAL)' );
 
-     FConnection.ExecSQL(
+      FConnection.ExecSQL(
       'CREATE TABLE IF NOT EXISTS pedidositens (' +
       'id INTEGER PRIMARY KEY AUTOINCREMENT, ' +
       'numpedido INTEGER, codproduto INTEGER, quant REAL,' +
       'valorunitario REAL, valortotal REAL,' +
       'FOREIGN KEY (numpedido) REFERENCES pedidos(numpedido) ON DELETE CASCADE)' );
+
+      result := true;
+
+  end;
+
+  function CreateIndex( FConnection: TFDConnection) : Boolean;
+  begin
+    FConnection.ExecSQL( 'CREATE INDEX IF NOT EXISTS idx_codcliente ON pedidos (codcliente)');
+    FConnection.ExecSQL( 'CREATE INDEX IF NOT EXISTS idx_numpedido ON pedidositens (numpedido)');
+    FConnection.ExecSQL( 'CREATE INDEX IF NOT EXISTS idx_codproduto ON pedidositens (codproduto)');
   end;
 
 

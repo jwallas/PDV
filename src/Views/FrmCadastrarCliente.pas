@@ -15,9 +15,9 @@ type
     lblNascimento: TLabel;
     edtUF: TEdit;
     BitBtnOK: TBitBtn;
-    BitBtnCancelar: TBitBtn;
+    BitBtnSair: TBitBtn;
     procedure BitBtnOKClick(Sender: TObject);
-    procedure BitBtnCancelarClick(Sender: TObject);
+    procedure BitBtnSairClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -32,11 +32,6 @@ implementation
 uses ClienteControllerUnit, ClienteViewModel;
 
 {$R *.dfm}
-
-procedure TFormCadastrarCliente.BitBtnCancelarClick(Sender: TObject);
-begin
-  ModalResult := mrCancel;
-end;
 
 procedure TFormCadastrarCliente.BitBtnOKClick(Sender: TObject);
 var
@@ -54,6 +49,7 @@ begin
      if ( cliente.Nome = '' ) or ( cliente.Cidade = '' ) or (cliente.UF = '' )  then
      begin
        ShowMessage( 'É Necessário informar todos os dados' );
+       edtNome.SetFocus;
      end
      else resultado := clienteController.SalvarCliente(cliente);
 
@@ -62,11 +58,18 @@ begin
        edtNome.Clear;
        edtCidade.Clear;
        edtUF.Clear;
+       edtNome.SetFocus;
+       ShowMessage( 'Cliente cadastrado com sucesso!' );
      end;
 
    finally
      cliente.Free;
    end;
+end;
+
+procedure TFormCadastrarCliente.BitBtnSairClick(Sender: TObject);
+begin
+  close;
 end;
 
 end.

@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus, Vcl.Grids, Vcl.ExtCtrls,
-  Vcl.StdCtrls, Data.DB, Datasnap.DBClient, Vcl.DBGrids, Vcl.Buttons;
+  Vcl.StdCtrls, Data.DB, Datasnap.DBClient, Vcl.DBGrids, Vcl.Buttons, System.Generics.Collections;
 
 type
   TFormPDV = class(TForm)
@@ -33,7 +33,6 @@ type
     ButtonExcluirItem: TButton;
     Label5: TLabel;
     editCodigoCliente: TEdit;
-    BitBtnPesquisarClientes: TBitBtn;
     BitBtnCancelarPedido: TBitBtn;
     ButtonSair: TButton;
     ClientDataSetItensCodigo: TStringField;
@@ -41,6 +40,8 @@ type
     ClientDataSetItensQtd: TFloatField;
     ClientDataSetItensUnitario: TFloatField;
     ClientDataSetItensTotal: TFloatField;
+    editNomeDoCliente: TEdit;
+    Label6: TLabel;
     procedure mniClientesClick(Sender: TObject);
     procedure mniProdutosClick(Sender: TObject);
     procedure editCodigoClienteExit(Sender: TObject);
@@ -55,9 +56,10 @@ type
     procedure ClientDataSetItensAfterPost(DataSet: TDataSet);
     procedure dbGridProdutosDrawColumnCell(Sender: TObject; const Rect: TRect;
       DataCol: Integer; Column: TColumn; State: TGridDrawState);
-    procedure ClientDataSetItensQtdChange(Sender: TField);
     procedure dbGridProdutosKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure mniPedidosRealizadosClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
 
@@ -73,6 +75,8 @@ type
     procedure LimparControles();
     procedure LimparControlesProduto();
     procedure setCodigoCliente(const Value: Integer);
+    procedure TratarEnterPadrao(Sender: TObject; var Key: Char);
+    procedure AplicarEnterParaTodosOsEdits(Form: TForm);
 
     property CodigoCliente: Integer read getCodigoCliente write setCodigoCliente;
     property SubTotal: Double read getSubTotal write setSubTotal;
@@ -89,7 +93,9 @@ implementation
 
 uses FrmCadastrarCliente, FrmCadastrarProduto,
      ProdutoViewModel, ProdutoControllerUnit,
-     ClienteViewModel, ClienteControllerUnit;
+     ClienteViewModel, ClienteControllerUnit,
+     PedidoControllerUnit, PedidoViewModel,
+     PedidoItemViewModel, FrmListaDePedidos;
 
 var
 
@@ -141,6 +147,9 @@ begin
            clienteDefinido.Free;
          end;
 
+         editNomeDoCliente.Text := clienteDefinido.Nome;
+         editCodigoProduto.SetFocus;
+
         except on E: Exception do
            ShowMessage('Ocorreu um erro: ' + E.Message);
         end;
@@ -175,6 +184,7 @@ begin
        if ( ultimoProdutoPesquisado.Descricao = EmptyStr ) then
        begin
          ShowMessage( 'Produto não encontrado' );
+         editCodigoProduto.SetFocus();
          ultimoProdutoPesquisado.Free;
        end;
 
@@ -207,9 +217,49 @@ begin
 end;
 
 procedure TFormPDV.ButtonGravarPedidoClick(Sender: TObject);
+var
+  pedidoController: TPedidoController;
+  pedido : TPedidoViewModel;
+  item   : TPedidoItemViewModel;
+  itens  : TObjectList<TPedidoItemViewModel> ;
+  resultado: Boolean;
 begin
   if Assigned(clienteDefinido) then
   begin
+
+    pedido := TPedidoViewModel.Create;
+    pedido.DataEmissao := DateToStr(now);
+    pedido.CodCliente  := clientedefinido.Codigo;
+    pedido.ValorTotal  := SubTotal;
+
+    itens := TObjectList<TPedidoItemViewModel>.Create;
+
+    ClientDataSetItens.DisableControls;
+    try
+      ClientDataSetItens.First;
+      while not ClientDataSetItens.Eof do
+      begin
+
+        item := TPedidoItemViewModel.Create;
+        item.CodProduto := ClientDataSetItensCodigo.AsInteger;
+        item.Quant      := ClientDataSetItensQtd.AsFloat;
+        item.ValorUnit  := ClientDataSetItensUnitario.AsFloat;
+        item.ValorTotal := ClientDataSetItensTotal.AsFloat;
+
+        itens.Add(item);
+
+        ClientDataSetItens.Next;
+      end
+    finally
+      ClientDataSetItens.DisableControls;
+    end;
+
+
+    if (pedidoController.SalvarPedido(pedido,itens)) then
+    begin
+      ShowMessage('Pedido gravado com sucesso.');
+      LimparControles();
+    end;
 
   end;
 
@@ -335,18 +385,24 @@ begin
   else LimparControlesProduto;
 end;
 
+procedure TFormPDV.FormCreate(Sender: TObject);
+begin
+  AplicarEnterParaTodosOsEdits(Self);
+end;
+
 procedure TFormPDV.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
+{
   if Key = VK_RETURN then
   begin
-
       if not (ActiveControl is TDBGrid) then
       begin
         Key := 0;
         Perform(WM_NEXTDLGCTL, 0, 0);
       end;
   end;
+  }
   if key = VK_ESCAPE then
   begin
      if MessageDlg('Deseja realmente sair da aplicação?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
@@ -373,10 +429,47 @@ begin
 end;
 
 procedure TFormPDV.LimparControles;
+var
+  I: Integer;
 begin
 
+  editCodigoCliente.Clear;
+  editNomeDoCliente.Clear;
+
+  SubTotal := 0;
+
   if ClientDataSetItens.Active then
-    ClientDataSetItens.EmptyDataSet;
+  begin
+
+    DataSourceItens.DataSet := nil;
+
+    ClientDataSetItens.Close;
+    ClientDataSetItens.Open;
+
+
+    DataSourceItens.DataSet := ClientDataSetItens;
+
+
+    for I := 1 to 2 do
+    begin
+      ClientDataSetItens.Append;
+
+
+      if ClientDataSetItens.FindField('Descricao') <> nil then
+        ClientDataSetItens.FieldByName('Descricao').AsString := '';
+
+      ClientDataSetItens.Post;
+    end;
+
+
+    dbGridProdutos.DataSource := nil;
+    dbGridProdutos.DataSource := DataSourceItens;
+
+    dbGridProdutos.Repaint;
+    dbGridProdutos.Refresh;
+    Application.ProcessMessages;
+  end;
+
 
   ultimoProdutoPesquisado.Free;
 
@@ -384,7 +477,7 @@ end;
 
 procedure TFormPDV.LimparControlesProduto;
 begin
-  editCodigoCliente.Clear;
+
   editCodigoProduto.Clear;
   editDescricaoDoProduto.Clear;
   editQuantidade.Clear;
@@ -403,6 +496,18 @@ begin
   end;
 end;
 
+
+procedure TFormPDV.mniPedidosRealizadosClick(Sender: TObject);
+var
+  frm: TFormListaDePedidos;
+begin
+  frm := TFormListaDePedidos.Create(nil);
+  try
+    frm.ShowModal;
+  finally
+    frm.Free;
+  end;
+end;
 
 procedure TFormPDV.mniProdutosClick(Sender: TObject);
 var
@@ -436,5 +541,27 @@ begin
    FSubTotal := Value;
    pnlSubTotal.Caption := FloatToStrF( Value, ffCurrency, 12, 2 );
 end;
+
+procedure TFormPDV.TratarEnterPadrao(Sender: TObject; var Key: Char);
+begin
+  if Key = #13 then
+  begin
+    Key := #0;
+    SelectNext(ActiveControl, True, True);
+  end;
+end;
+
+procedure TFormPDV.AplicarEnterParaTodosOsEdits(Form: TForm);
+var
+  i: Integer;
+begin
+  for i := 0 to Form.ComponentCount - 1 do
+  begin
+    if Form.Components[i] is TEdit then
+      TEdit(Form.Components[i]).OnKeyPress := TratarEnterPadrao;
+  end;
+end;
+
+
 
 end.

@@ -1,18 +1,21 @@
-unit PedidoViewModel;
+unit PedidoQueriesUnit;
 
 interface
 
+
 type
-  TPedidoViewModel = class
+  TPedidoQueries = class
   private
     FNumPedido: Integer;
-    FDataEmissao: string;
+    FDataEmissao: String;
     FCodCliente: Integer;
     FValorTotal: Double;
+    FNome: string;
   published
     property NumPedido: Integer read FNumPedido write FNumPedido;
-    property DataEmissao: string read FDataEmissao write FDataEmissao;
+    property DataEmissao: String read FDataEmissao write FDataEmissao;
     property CodCliente: Integer read FCodCliente write FCodCliente;
+    property Nome: string read FNome write FNome;
     property ValorTotal: Double read FValorTotal write FValorTotal;
   end;
 

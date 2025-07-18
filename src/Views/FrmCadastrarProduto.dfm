@@ -1,6 +1,9 @@
 object FormCadastrarProduto: TFormCadastrarProduto
   Left = 0
   Top = 0
+  ActiveControl = edtDescricao
+  BorderIcons = [biSystemMenu]
+  BorderStyle = bsDialog
   Caption = 'Cadastrar Produto'
   ClientHeight = 127
   ClientWidth = 389
@@ -10,6 +13,7 @@ object FormCadastrarProduto: TFormCadastrarProduto
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
+  Position = poScreenCenter
   TextHeight = 15
   object lblNome: TLabel
     Left = 20
@@ -53,6 +57,7 @@ object FormCadastrarProduto: TFormCadastrarProduto
     Caption = '&Sair'
     NumGlyphs = 2
     TabOrder = 3
+    OnClick = BitBtnCancelarClick
   end
   object edtPreco: TEdit
     Left = 120

@@ -1,6 +1,7 @@
 object FormCadastrarCliente: TFormCadastrarCliente
   Left = 0
   Top = 0
+  ActiveControl = edtNome
   BorderIcons = [biSystemMenu]
   Caption = 'Cadastrar Cliente'
   ClientHeight = 147
@@ -63,21 +64,21 @@ object FormCadastrarCliente: TFormCadastrarCliente
     Top = 114
     Width = 75
     Height = 25
-    Caption = 'OK'
+    Caption = '&Gravar'
     Default = True
     NumGlyphs = 2
     TabOrder = 3
     OnClick = BitBtnOKClick
   end
-  object BitBtnCancelar: TBitBtn
+  object BitBtnSair: TBitBtn
     Left = 309
     Top = 114
     Width = 75
     Height = 25
-    Cancel = True
-    Caption = 'Cancelar'
+    Caption = '&Sair'
+    Default = True
     NumGlyphs = 2
     TabOrder = 4
-    OnClick = BitBtnCancelarClick
+    OnClick = BitBtnSairClick
   end
 end

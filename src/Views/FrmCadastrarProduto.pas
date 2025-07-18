@@ -15,6 +15,7 @@ type
     BitBtnCancelar: TBitBtn;
     edtPreco: TEdit;
     procedure BitBtnGravarClick(Sender: TObject);
+    procedure BitBtnCancelarClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -30,6 +31,11 @@ uses ProdutoControllerUnit, ProdutoViewModel;
 
 {$R *.dfm}
 
+procedure TFormCadastrarProduto.BitBtnCancelarClick(Sender: TObject);
+begin
+  close;
+end;
+
 procedure TFormCadastrarProduto.BitBtnGravarClick(Sender: TObject);
 var
   produto : TProdutoViewModel;
@@ -40,11 +46,16 @@ begin
    produto := TProdutoViewModel.Create();
    try
      produto.Descricao := Trim(edtDescricao.Text);
-     produto.PrecoVenda := StrToFloat(edtPreco.Text);
+     produto.PrecoVenda := StrToFloatDef(edtPreco.Text,0);
+
+     resultado := false;
+
+     produtoController := TProdutoController.Create;
 
      if ( produto.Descricao = '' ) or ( produto.PrecoVenda = 0 )   then
      begin
        ShowMessage( 'É Necessário informar todos os dados' );
+       edtDescricao.SetFocus();
      end
      else resultado := produtoController.SalvarProduto(produto);
 
@@ -52,6 +63,8 @@ begin
      begin
        edtDescricao.Clear;
        edtPreco.Clear;
+       edtDescricao.SetFocus();
+       ShowMessage( 'Produto cadastrado com sucesso!' );
      end;
 
    finally

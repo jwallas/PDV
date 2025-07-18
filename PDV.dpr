@@ -25,7 +25,10 @@ uses
   PedidoViewModel in 'src\ViewsModels\PedidoViewModel.pas',
   PedidoItemViewModel in 'src\ViewsModels\PedidoItemViewModel.pas',
   FrmCadastrarProduto in 'src\Views\FrmCadastrarProduto.pas' {FormCadastrarProduto},
-  ProdutoControllerUnit in 'src\Controllers\ProdutoControllerUnit.pas';
+  ProdutoControllerUnit in 'src\Controllers\ProdutoControllerUnit.pas',
+  PedidoControllerUnit in 'src\Controllers\PedidoControllerUnit.pas',
+  FrmListaDePedidos in 'src\Views\FrmListaDePedidos.pas' {FormListaDePedidos},
+  PedidoQueriesUnit in 'src\Queries\PedidoQueriesUnit.pas';
 
 {$R *.res}
 
@@ -35,5 +38,6 @@ begin
   Application.CreateForm(TFormPDV, FormPDV);
   Application.CreateForm(TFormCadastrarCliente, FormCadastrarCliente);
   Application.CreateForm(TFormCadastrarProduto, FormCadastrarProduto);
+  Application.CreateForm(TFormListaDePedidos, FormListaDePedidos);
   Application.Run;
 end.

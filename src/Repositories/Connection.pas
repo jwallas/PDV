@@ -10,7 +10,6 @@ uses
 
 function GetConnection: TFDConnection;
 
-
 implementation
 
 uses
@@ -48,6 +47,7 @@ begin
     FConnection.ExecSQL('PRAGMA foreign_keys = ON;');
 
     CreateTable(FConnection);
+    CreateIndex(FConnection);
 
   end;
 

@@ -3,13 +3,16 @@ unit PedidoRepository;
 interface
 
 uses
-  IPedidoInterfaceUnit, PedidoModelUnit, System.SysUtils, System.Generics.Collections;
+  IPedidoInterfaceUnit, PedidoModelUnit, PedidoQueriesUnit,
+  System.SysUtils, System.Generics.Collections, System.DateUtils;
 
 type
   TPedidoRepository = class(TInterfacedObject, IPedidoInterface)
   public
-    function BuscarPorCodigo(const NumPedido: Integer): TPedido;
-    function Listar: TObjectList<TPedido>;
+    function BuscarPorPedido(const NumPedido: Integer): TPedido;
+    function BuscarPorCliente(const Codigo: Integer): TPedido;
+    function BuscarUltimoPedido(): TPedido;
+    function Listar: TObjectList<TPedidoQueries>;
     function Adicionar(const Pedido: TPedido): Boolean;
     function Atualizar(const Pedido: TPedido): Boolean;
     function Excluir(const NumPedido: Integer): Boolean;
@@ -28,27 +31,33 @@ uses Connection,
      FireDAC.Phys.SQLiteDef,
      FireDAC.Stan.Def,
      FireDAC.Stan.Async,
-     FireDAC.DApt;
+     FireDAC.DApt,
+     Functions;
 
-function TPedidoRepository.Listar: TObjectList<TPedido>;
+function TPedidoRepository.Listar: TObjectList<TPedidoQueries>;
 var
   Query: TFDQuery;
-  Pedido: TPedido;
+  Pedido: TPedidoQueries;
 begin
 
-  Result := TObjectList<TPedido>.Create;
+  Result := TObjectList<TPedidoQueries>.Create;
   Query := TFDQuery.Create(nil);
   try
     Query.Connection := GetConnection;
-    Query.SQL.Text := 'SELECT numpedido,dataemissao,codcliente,valortotal FROM pedidos';
+    Query.SQL.Text := 'SELECT p.numpedido, p.dataemissao AS dataemissao, p.codcliente, c.nome, p.valortotal ' +
+                      'FROM pedidos p ' +
+                      'INNER JOIN clientes c ON p.codcliente = c.codigo order by p.numpedido ';
     Query.Open;
     while not Query.Eof do
     begin
 
-      Pedido := TPedido.Create;
+      Pedido := TPedidoQueries.Create;
       Pedido.NumPedido := Query.FieldByName('numpedido').AsInteger;
-      Pedido.DataEmissao := Query.FieldByName('dataemissao').AsDateTime;
+
+      Pedido.DataEmissao := Query.FieldByName('dataemissao').AsString;
+
       Pedido.CodCliente := Query.FieldByName('codcliente').AsInteger;
+      Pedido.Nome := Query.FieldByName('nome').AsString;
       Pedido.ValorTotal := Query.FieldByName('valortotal').AsFloat;
 
       Result.Add(Pedido);
@@ -98,8 +107,74 @@ begin
 
 end;
 
-function TPedidoRepository.BuscarPorCodigo(const NumPedido: Integer): TPedido;
+function TPedidoRepository.BuscarPorCliente(const Codigo: Integer): TPedido;
+var
+  Query: TFDQuery;
+  Pedido : TPedido;
 begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := GetConnection;
+    Query.SQL.Text := 'SELECT * FROM pedidos where codcliente = :codcliente';
+    Query.ParamByName('codcliente').AsInteger := Codigo;
+    Query.Open;
+
+    Pedido := TPedido.Create;
+    if not Query.IsEmpty then
+    begin
+      MapQueryToModel(Query, Pedido);
+    end;
+    Result := Pedido;
+  finally
+    Query.Free;
+  end;
+
+end;
+
+function TPedidoRepository.BuscarPorPedido(const NumPedido: Integer): TPedido;
+var
+  Query: TFDQuery;
+  Pedido : TPedido;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := GetConnection;
+    Query.SQL.Text := 'SELECT * FROM pedidos where numpedido = :numpedido';
+    Query.ParamByName('numpedido').AsInteger := NumPedido;
+    Query.Open;
+
+    Pedido := TPedido.Create;
+    if not Query.IsEmpty then
+    begin
+      MapQueryToModel(Query, Pedido);
+    end;
+    Result := Pedido;
+  finally
+    Query.Free;
+  end;
+
+end;
+
+function TPedidoRepository.BuscarUltimoPedido: TPedido;
+var
+  Query: TFDQuery;
+  Pedido : TPedido;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := GetConnection;
+    Query.SQL.Text := 'SELECT numpedido FROM pedidos ORDER BY numpedido DESC limit 1';
+    Query.Open;
+
+    Pedido := TPedido.Create;
+    if not Query.IsEmpty then
+    begin
+      MapQueryToModel(Query, Pedido);
+    end;
+    Result := Pedido;
+  finally
+    Query.Free;
+  end;
 
 end;
 

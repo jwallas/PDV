@@ -3,7 +3,7 @@ object FormPDV: TFormPDV
   Top = 0
   ActiveControl = editCodigoCliente
   BorderIcons = [biSystemMenu]
-  BorderStyle = bsDialog
+  BorderStyle = bsSingle
   Caption = 'Pedidos'
   ClientHeight = 600
   ClientWidth = 800
@@ -16,6 +16,7 @@ object FormPDV: TFormPDV
   KeyPreview = True
   Menu = MainMenuPDV
   Position = poScreenCenter
+  OnCreate = FormCreate
   OnKeyDown = FormKeyDown
   TextHeight = 15
   object pnlTopo: TPanel
@@ -60,12 +61,19 @@ object FormPDV: TFormPDV
       Height = 15
       Caption = 'C'#243'digo do Cliente'
     end
+    object Label6: TLabel
+      Left = 160
+      Top = 6
+      Width = 90
+      Height = 15
+      Caption = 'Nome do Cliente'
+    end
     object editCodigoProduto: TEdit
       Left = 16
       Top = 77
       Width = 121
       Height = 23
-      TabOrder = 3
+      TabOrder = 1
       OnExit = editCodigoProdutoExit
     end
     object editQuantidade: TEdit
@@ -73,14 +81,14 @@ object FormPDV: TFormPDV
       Top = 77
       Width = 121
       Height = 23
-      TabOrder = 5
+      TabOrder = 2
     end
     object editValor: TEdit
       Left = 663
       Top = 77
       Width = 121
       Height = 23
-      TabOrder = 6
+      TabOrder = 3
       OnExit = editValorExit
     end
     object editDescricaoDoProduto: TEdit
@@ -100,22 +108,24 @@ object FormPDV: TFormPDV
       TabOrder = 0
       OnExit = editCodigoClienteExit
     end
-    object BitBtnPesquisarClientes: TBitBtn
-      Left = 160
-      Top = 25
-      Width = 114
-      Height = 25
-      Caption = '&Pesquisar Clientes'
-      TabOrder = 1
-    end
     object BitBtnCancelarPedido: TBitBtn
-      Left = 288
+      Left = 527
       Top = 25
       Width = 114
       Height = 25
       Caption = '&Cancelar Pedido'
-      TabOrder = 2
+      TabOrder = 6
+      TabStop = False
       OnClick = BitBtnCancelarPedidoClick
+    end
+    object editNomeDoCliente: TEdit
+      Left = 160
+      Top = 27
+      Width = 353
+      Height = 23
+      ReadOnly = True
+      TabOrder = 5
+      OnExit = editCodigoClienteExit
     end
   end
   object pnlSubtotal: TPanel
@@ -142,7 +152,6 @@ object FormPDV: TFormPDV
     Height = 60
     Align = alBottom
     TabOrder = 2
-    ExplicitTop = 546
     object ButtonGravarPedido: TButton
       Left = 469
       Top = 16
@@ -234,6 +243,7 @@ object FormPDV: TFormPDV
       Caption = 'Consultas'
       object mniPedidosRealizados: TMenuItem
         Caption = 'Pedidos Realizados'
+        OnClick = mniPedidosRealizadosClick
       end
     end
   end
@@ -289,7 +299,6 @@ object FormPDV: TFormPDV
     end
     object ClientDataSetItensQtd: TFloatField
       FieldName = 'Qtd'
-      OnChange = ClientDataSetItensQtdChange
     end
     object ClientDataSetItensUnitario: TFloatField
       DisplayLabel = 'Unit'#225'rio'

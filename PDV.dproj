@@ -156,6 +156,12 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="src\Controllers\ProdutoControllerUnit.pas"/>
+        <DCCReference Include="src\Controllers\PedidoControllerUnit.pas"/>
+        <DCCReference Include="src\Views\FrmListaDePedidos.pas">
+            <Form>FormListaDePedidos</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="src\Queries\PedidoQueriesUnit.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
