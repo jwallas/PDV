@@ -23,9 +23,6 @@ O código está estruturado em camadas bem definidas, localizadas dentro da past
 ├── Views
 └── ViewsModels
 
-yaml
-Copiar
-Editar
 
 ### 📂 Explicação das Pastas
 
